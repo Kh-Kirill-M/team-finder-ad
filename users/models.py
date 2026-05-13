@@ -4,15 +4,22 @@ from django.db import models
 from .avatar import generate_avatar
 from .managers import UserManager
 
+NAME_MAX_LENGTH = 124
+SURNAME_MAX_LENGTH = 124
+PHONE_MAX_LENGTH = 12
+ABOUT_MAX_LENGTH = 256
+AVATAR_UPLOAD_DIR = "avatars/"
+DEFAULT_AVATAR_LETTER = "?"
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField("Email", unique=True)
-    name = models.CharField("Имя", max_length=124)
-    surname = models.CharField("Фамилия", max_length=124)
-    avatar = models.ImageField("Аватар", upload_to="avatars/")
-    phone = models.CharField("Телефон", max_length=12, unique=True)
+    name = models.CharField("Имя", max_length=NAME_MAX_LENGTH)
+    surname = models.CharField("Фамилия", max_length=SURNAME_MAX_LENGTH)
+    avatar = models.ImageField("Аватар", upload_to=AVATAR_UPLOAD_DIR)
+    phone = models.CharField("Телефон", max_length=PHONE_MAX_LENGTH, unique=True)
     github_url = models.URLField("GitHub", blank=True)
-    about = models.TextField("О себе", max_length=256, blank=True)
+    about = models.TextField("О себе", max_length=ABOUT_MAX_LENGTH, blank=True)
 
     favorites = models.ManyToManyField(
         "projects.Project",
@@ -46,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         if not self.avatar:
-            filename, content = generate_avatar(self.name[:1] if self.name else "?")
+            letter = self.name[:1] if self.name else DEFAULT_AVATAR_LETTER
+            filename, content = generate_avatar(letter)
             self.avatar.save(filename, content, save=False)
         super().save(*args, **kwargs)

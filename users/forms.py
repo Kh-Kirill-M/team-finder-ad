@@ -3,14 +3,18 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordChangeForm
 
 from .models import User
+from .utils import make_placeholder_phone
 from .validators import normalize_phone, validate_github_url, validate_phone
+
+PASSWORD_MIN_LENGTH = 4
+ABOUT_TEXTAREA_ROWS = 4
 
 
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(
         label="Пароль",
         widget=forms.PasswordInput(),
-        min_length=4,
+        min_length=PASSWORD_MIN_LENGTH,
     )
 
     class Meta:
@@ -33,20 +37,10 @@ class RegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         # phone обязателен в модели — на регистрации его нет,
         # ставим уникальную заглушку и просим заполнить в профиле.
-        user.phone = self._make_placeholder_phone()
+        user.phone = make_placeholder_phone()
         if commit:
             user.save()
         return user
-
-    @staticmethod
-    def _make_placeholder_phone():
-        """Уникальный placeholder в формате +7XXXXXXXXXX до заполнения профиля."""
-        import secrets
-        while True:
-            tail = "".join(str(secrets.randbelow(10)) for _ in range(10))
-            candidate = "+7" + tail
-            if not User.objects.filter(phone=candidate).exists():
-                return candidate
 
 
 class LoginForm(forms.Form):
@@ -86,7 +80,7 @@ class ProfileEditForm(forms.ModelForm):
         }
         widgets = {
             "avatar": forms.ClearableFileInput(attrs={"id": "id_avatar"}),
-            "about": forms.Textarea(attrs={"rows": 4}),
+            "about": forms.Textarea(attrs={"rows": ABOUT_TEXTAREA_ROWS}),
         }
 
     def clean_phone(self):

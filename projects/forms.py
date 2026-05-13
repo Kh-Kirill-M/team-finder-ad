@@ -4,6 +4,13 @@ from users.validators import validate_github_url
 
 from .models import Project
 
+DESCRIPTION_TEXTAREA_ROWS = 6
+
+STATUS_CHOICES_RU = [
+    (Project.STATUS_OPEN, "Открыт"),
+    (Project.STATUS_CLOSED, "Закрыт"),
+]
+
 
 class ProjectForm(forms.ModelForm):
     class Meta:
@@ -16,11 +23,8 @@ class ProjectForm(forms.ModelForm):
             "status": "Статус",
         }
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 6}),
-            "status": forms.Select(choices=[
-                (Project.STATUS_OPEN, "Открыт"),
-                (Project.STATUS_CLOSED, "Закрыт"),
-            ]),
+            "description": forms.Textarea(attrs={"rows": DESCRIPTION_TEXTAREA_ROWS}),
+            "status": forms.Select(choices=STATUS_CHOICES_RU),
         }
 
     def clean_name(self):
